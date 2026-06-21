@@ -1,167 +1,36 @@
-import React, { useRef, useState } from "react";
-import { toJpeg } from "html-to-image";
-import PhotoStrip from "./PhotoStrip";
-import { BACKDROPS, FILTERS, LAYOUTS, MAX_CAPTION_LENGTH, DEFAULT_CAPTION } from "./constants";
+export const MAX_CAPTION_LENGTH = 35;
+export const DEFAULT_CAPTION = "VIBEBOOTH MEMORY";
 
-export default function CustomizeExport({ photos, layoutId, onSave, onStartOver }) {
-  const layout = LAYOUTS.find((l) => l.id === layoutId) || LAYOUTS[0];
-  const [backdropId, setBackdropId] = useState(BACKDROPS[0].id);
-  const [filterId, setFilterId] = useState(FILTERS[0].id);
-  const [caption, setCaption] = useState("");
-  const [downloading, setDownloading] = useState(false);
-  const stripRef = useRef(null);
+export const LAYOUTS = [
+  { id: 'strip', name: '4-Panel Strip', slots: 4, shape: 'vertical', desc: 'Classic vertical stacked strip' },
+  { id: 'grid', name: '2x2 Pop Grid', slots: 4, shape: 'grid', desc: 'Square block layout' },
+  { id: 'polaroid', name: 'Retro Polaroid', slots: 1, shape: 'polaroid', desc: 'Vintage single-frame cutout' },
+  { id: 'slide', name: 'Film Slide', slots: 3, shape: 'slide', desc: '1 large top, 2 small bottom' },
+  { id: 'cinema', name: 'Cinema Panorama', slots: 3, shape: 'cinema', desc: '3 wide landscape shots side-by-side' },
+  { id: 'heart', name: 'Heart-Throb Grid', slots: 4, shape: 'heart', desc: 'Photos shaped into retro hearts' },
+  { id: 'trio', name: 'High-Fashion Trio', slots: 3, shape: 'trio', desc: '3 tall, elegant vertical splits' },
+  { id: 'scrapbook', name: 'Chaotic Scrapbook', slots: 4, shape: 'scrapbook', desc: 'Fun dynamically tilted collages' }
+];
 
-  const backdrop = BACKDROPS.find((b) => b.id === backdropId);
-  const filter = FILTERS.find((f) => f.id === filterId);
+export const BACKDROPS = [
+  { id: 'solid-cream', name: 'Studio Cream', type: 'color', value: '#f5f2eb' },
+  { id: 'solid-black', name: 'Midnight Black', type: 'color', value: '#09090b' },
+  { id: 'solid-white', name: 'Minimal White', type: 'color', value: '#ffffff' },
+  { id: 'solid-pink', name: 'Barbie Pink', type: 'color', value: '#ff79c6' },
+  { id: 'solid-matcha', name: 'Matcha Green', type: 'color', value: '#a3b18a' },
+  { id: 'solid-cherry', name: 'Cherry Red', type: 'color', value: '#e63946' },
+  { id: 'solid-cobalt', name: 'Cobalt Blue', type: 'color', value: '#0047ab' },
+  { id: 'sunset-glow', name: 'Sunset Glow', type: 'gradient', value: 'linear-gradient(to top right, #f97316, #ec4899, #8b5cf6)' },
+  { id: 'cotton-candy', name: 'Cotton Candy', type: 'gradient', value: 'linear-gradient(to bottom right, #fbcfe8, #e9d5ff, #22d3ee)' },
+  { id: 'cyber-neon', name: 'Cyber Neon', type: 'gradient', value: 'linear-gradient(to right, #d946ef, #06b6d4)' },
+  { id: 'aurora', name: 'Aurora Calm', type: 'gradient', value: 'linear-gradient(to bottom left, #86efac, #3b82f6, #8b5cf6)' },
+  { id: 'holo-glitch', name: 'Holo Prism', type: 'gradient', value: 'linear-gradient(to right, #22d3ee, #f472b6, #fef08a)' }
+];
 
-  async function handleDownload() {
-    if (!stripRef.current) return;
-    setDownloading(true);
-    try {
-      const dataUrl = await toJpeg(stripRef.current, { quality: 0.95, pixelRatio: 3 });
-      const link = document.createElement("a");
-      link.download = `vibebooth-${Date.now()}.jpg`;
-      link.href = dataUrl;
-      link.click();
-
-      onSave({
-        id: Date.now(),
-        date: new Date().toISOString(),
-        photos,
-        layoutId,
-        backdropId,
-        filterId,
-        caption: caption.trim() || DEFAULT_CAPTION,
-      });
-    } catch (err) {
-      console.error("Export failed:", err);
-      alert("Couldn't export the image — try again.");
-    } finally {
-      setDownloading(false);
-    }
-  }
-
-  function handlePrint() {
-    window.print();
-    onSave({
-      id: Date.now(),
-      date: new Date().toISOString(),
-      photos,
-      layoutId,
-      backdropId,
-      filterId,
-      caption: caption.trim() || DEFAULT_CAPTION,
-    });
-  }
-
-  return (
-    <div className="min-h-screen bg-[#f5f2eb] px-4 py-8">
-      <div className="max-w-5xl mx-auto grid md:grid-cols-[1fr_340px] gap-8">
-        {/* Preview */}
-        <div className="flex flex-col items-center">
-          <div className="font-mono text-[#16151A]/50 text-xs tracking-widest uppercase mb-4 self-start">
-            Preview
-          </div>
-          <div className="bg-white/40 rounded-3xl p-6 flex items-center justify-center w-full">
-            <PhotoStrip
-              ref={stripRef}
-              photos={photos}
-              backdrop={backdrop}
-              filter={filter}
-              caption={caption}
-              layoutShape={layout.shape}
-            />
-          </div>
-        </div>
-
-        {/* Controls */}
-        <div className="flex flex-col gap-7">
-          <div>
-            <button
-              onClick={onStartOver}
-              className="font-mono text-xs text-[#16151A]/40 tracking-widest uppercase hover:text-[#16151A] transition-colors"
-            >
-              ← Start over
-            </button>
-          </div>
-
-          {/* Backdrop */}
-          <div>
-            <div className="font-sans text-xs font-semibold text-[#16151A]/70 uppercase tracking-wide mb-2.5">
-              Backdrop
-            </div>
-            <div className="grid grid-cols-6 gap-2">
-              {BACKDROPS.map((b) => (
-                <button
-                  key={b.id}
-                  onClick={() => setBackdropId(b.id)}
-                  title={b.name}
-                  className={`aspect-square rounded-full ring-2 transition-all ${
-                    b.id === backdropId ? "ring-[#16151A] scale-95" : "ring-transparent hover:ring-[#16151A]/30"
-                  }`}
-                  style={b.type === "gradient" ? { backgroundImage: b.value } : { backgroundColor: b.value }}
-                />
-              ))}
-            </div>
-            <div className="font-sans text-xs text-[#16151A]/50 mt-2">{backdrop.name}</div>
-          </div>
-
-          {/* Filter */}
-          <div>
-            <div className="font-sans text-xs font-semibold text-[#16151A]/70 uppercase tracking-wide mb-2.5">
-              Filter
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {FILTERS.map((f) => (
-                <button
-                  key={f.id}
-                  onClick={() => setFilterId(f.id)}
-                  className={`font-sans text-xs font-medium px-3.5 py-2 rounded-full border transition-colors ${
-                    f.id === filterId
-                      ? "bg-[#16151A] text-[#f5f2eb] border-[#16151A]"
-                      : "bg-transparent text-[#16151A]/70 border-[#16151A]/15 hover:border-[#16151A]/40"
-                  }`}
-                >
-                  {f.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Caption */}
-          <div>
-            <div className="font-sans text-xs font-semibold text-[#16151A]/70 uppercase tracking-wide mb-2.5">
-              Footer text
-            </div>
-            <input
-              value={caption}
-              onChange={(e) => setCaption(e.target.value.slice(0, MAX_CAPTION_LENGTH))}
-              placeholder={DEFAULT_CAPTION}
-              className="w-full font-mono text-sm bg-white border border-[#16151A]/15 rounded-lg px-3.5 py-2.5 text-[#16151A] placeholder:text-[#16151A]/30 focus:outline-none focus:ring-2 focus:ring-[#16151A]/30"
-            />
-            <div className="font-sans text-xs text-[#16151A]/40 mt-1.5 text-right">
-              {caption.length} / {MAX_CAPTION_LENGTH}
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-col gap-2.5 mt-2">
-            <button
-              onClick={handleDownload}
-              disabled={downloading}
-              className="font-sans font-semibold text-sm bg-[#16151A] text-[#f5f2eb] px-6 py-3.5 rounded-full hover:bg-[#2a2830] transition-colors disabled:opacity-50"
-            >
-              {downloading ? "Exporting…" : "Download JPG"}
-            </button>
-            <button
-              onClick={handlePrint}
-              className="font-sans font-semibold text-sm bg-transparent text-[#16151A] border border-[#16151A]/20 px-6 py-3.5 rounded-full hover:border-[#16151A]/50 transition-colors"
-            >
-              Print
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+export const FILTERS = [
+  { id: 'filter-none', name: 'Natural', class: '' },
+  { id: 'filter-vintage', name: 'Vintage', class: 'contrast-125 brightness-95 sepia-[0.25]' },
+  { id: 'filter-noir', name: 'Noir (B&W)', class: 'grayscale-100 contrast-135 brightness-105' },
+  { id: 'filter-cyber', name: 'Cyber Glow', class: 'saturate-150 hue-rotate-[15deg] contrast-110' },
+  { id: 'filter-pastel', name: 'Muted Pastel', class: 'opacity-90 contrast-105 brightness-110 saturate-[0.70]' }
+];
