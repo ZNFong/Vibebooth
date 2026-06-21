@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import DesignSelector from './DesignSelector';
-import CameraFeed from './CameraFeed';
-import PhotoPicker from './PhotoPicker';
-import BoothStrip from './BoothStrip';
+import DesignSelector from './DesignSelector.tsx';
+import CameraFeed from './CameraFeed.tsx';
+import PhotoPicker from './PhotoPicker.tsx';
+import BoothStrip from './BoothStrip.tsx';
 
 const FRAME_THEMES = [
   // Solid Colors
