@@ -9,10 +9,10 @@ export default function CustomizeExport({ photos, layoutId, onSave, onStartOver 
   const [filterId, setFilterId] = useState(FILTERS[0].id);
   const [caption, setCaption] = useState("");
   const [downloading, setDownloading] = useState(false);
-  const stripRef = useRef(null);
+  const stripRef = useRef<HTMLDivElement>(null);
 
-  const backdrop = BACKDROPS.find((b) => b.id === backdropId);
-  const filter = FILTERS.find((f) => f.id === filterId);
+  const backdrop = BACKDROPS.find((b) => b.id === backdropId) || BACKDROPS[0];
+  const filter = FILTERS.find((f) => f.id === filterId) || FILTERS[0];
 
   async function handleDownload() {
     if (!stripRef.current) return;
@@ -68,7 +68,7 @@ export default function CustomizeExport({ photos, layoutId, onSave, onStartOver 
               photos={photos}
               backdrop={backdrop}
               filter={filter}
-              caption={caption}
+              caption={caption.trim() || DEFAULT_CAPTION}
               layoutShape={layout.shape}
             />
           </div>
@@ -78,6 +78,7 @@ export default function CustomizeExport({ photos, layoutId, onSave, onStartOver 
         <div className="flex flex-col gap-7">
           <div>
             <button
+              type="button"
               onClick={onStartOver}
               className="font-mono text-xs text-[#16151A]/40 tracking-widest uppercase hover:text-[#16151A] transition-colors"
             >
@@ -94,6 +95,7 @@ export default function CustomizeExport({ photos, layoutId, onSave, onStartOver 
               {BACKDROPS.map((b) => (
                 <button
                   key={b.id}
+                  type="button"
                   onClick={() => setBackdropId(b.id)}
                   title={b.name}
                   className={`aspect-square rounded-full ring-2 transition-all ${
@@ -115,6 +117,7 @@ export default function CustomizeExport({ photos, layoutId, onSave, onStartOver 
               {FILTERS.map((f) => (
                 <button
                   key={f.id}
+                  type="button"
                   onClick={() => setFilterId(f.id)}
                   className={`font-sans text-xs font-medium px-3.5 py-2 rounded-full border transition-colors ${
                     f.id === filterId
@@ -147,6 +150,7 @@ export default function CustomizeExport({ photos, layoutId, onSave, onStartOver 
           {/* Actions */}
           <div className="flex flex-col gap-2.5 mt-2">
             <button
+              type="button"
               onClick={handleDownload}
               disabled={downloading}
               className="font-sans font-semibold text-sm bg-[#16151A] text-[#f5f2eb] px-6 py-3.5 rounded-full hover:bg-[#2a2830] transition-colors disabled:opacity-50"
@@ -154,6 +158,7 @@ export default function CustomizeExport({ photos, layoutId, onSave, onStartOver 
               {downloading ? "Exporting…" : "Download JPG"}
             </button>
             <button
+              type="button"
               onClick={handlePrint}
               className="font-sans font-semibold text-sm bg-transparent text-[#16151A] border border-[#16151A]/20 px-6 py-3.5 rounded-full hover:border-[#16151A]/50 transition-colors"
             >
