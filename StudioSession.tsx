@@ -1,118 +1,141 @@
-import React, { useRef, useState, useEffect, useCallback } from "react";
-import Webcam from "react-webcam";
-import { CAPTURE_COUNT, CAPTURE_INTERVAL_SECONDS } from "../constants";
+import React, { useState, useEffect, useRef } from 'react';
+import { LAYOUTS } from './constants';
 
-export default function StudioSession({ onComplete, onCancel }) {
-  const webcamRef = useRef(null);
-  const [shots, setShots] = useState([]);
-  const [countdown, setCountdown] = useState(CAPTURE_INTERVAL_SECONDS);
+export default function StudioSession({ slotsCount, onComplete, onCancel }) {
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [currentSlot, setCurrentSlot] = useState(0);
+  const [photos, setPhotos] = useState<string[]>([]);
   const [flash, setFlash] = useState(false);
-  const [cameraError, setCameraError] = useState(false);
-  const [cameraReady, setCameraReady] = useState(false);
-
-  const capture = useCallback(() => {
-    if (!webcamRef.current) return;
-    const imageSrc = webcamRef.current.getScreenshot();
-    if (imageSrc) {
-      setShots((prev) => [...prev, imageSrc]);
-      setFlash(true);
-      setTimeout(() => setFlash(false), 400);
-    }
-  }, []);
+  
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    if (shots.length >= CAPTURE_COUNT) {
-      const t = setTimeout(() => onComplete(shots), 600);
-      return () => clearTimeout(t);
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { width: 1280, height: 720, facingMode: 'user' }, 
+          audio: false 
+        });
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (err) {
+        console.error("Error accessing camera:", err);
+        alert("Could not access your camera. Please check your permissions.");
+      }
     }
-    if (!cameraReady) return;
+    startCamera();
 
-    if (countdown <= 0) {
-      capture();
-      setCountdown(CAPTURE_INTERVAL_SECONDS);
-      return;
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
+  function triggerCapture() {
+    if (countdown !== null) return;
+    setCountdown(3);
+  }
+
+  useEffect(() => {
+    if (countdown === null) return;
+    
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
     }
-    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countdown, shots.length, cameraReady]);
+
+    // Countdown hit 0, flash and capture!
+    setFlash(true);
+    setTimeout(() => setFlash(false), 150);
+    captureSnapshot();
+    setCountdown(null);
+  }, [countdown]);
+
+  function captureSnapshot() {
+    if (!videoRef.current) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 800;
+    canvas.height = 600;
+    const ctx = canvas.getContext('2d');
+    
+    if (ctx) {
+      // Mirror the photo horizontally to match preview experience
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      const updatedPhotos = [...photos, dataUrl];
+      setPhotos(updatedPhotos);
+
+      if (currentSlot + 1 >= slotsCount) {
+        // Wrap up session
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+        }
+        onComplete(updatedPhotos);
+      } else {
+        setCurrentSlot(currentSlot + 1);
+      }
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-[#0c0c0e] flex flex-col items-center justify-center px-4 py-8 relative overflow-hidden">
-      {/* Flash overlay */}
-      {flash && (
-        <div className="fixed inset-0 bg-white z-50 pointer-events-none animate-flash" />
-      )}
+    <div className="min-h-screen bg-[#16151A] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      {/* Visual Flash Element */}
+      {flash && <div className="absolute inset-0 bg-white z-50 animate-fade" />}
 
-      <div className="w-full max-w-2xl">
-        <div className="flex items-center justify-between mb-4 px-1">
-          <div className="font-mono text-[#f5f2eb]/60 text-xs tracking-widest uppercase">
-            Live session
+      <div className="w-full max-w-3xl flex flex-col gap-4">
+        {/* Header Indicators */}
+        <div className="flex justify-between items-center px-2">
+          <div className="font-mono text-xs text-white/40 tracking-widest uppercase">
+            Frame {currentSlot + 1} of {slotsCount}
           </div>
-          <button
+          <button 
             onClick={onCancel}
-            className="font-mono text-[#f5f2eb]/40 text-xs tracking-widest uppercase hover:text-[#f5f2eb] transition-colors"
+            className="font-mono text-xs text-white/40 hover:text-white uppercase tracking-widest"
           >
-            Cancel
+            Cancel [esc]
           </button>
         </div>
 
-        {/* Viewfinder */}
-        <div className="relative rounded-2xl overflow-hidden bg-black aspect-[4/3] ring-1 ring-[#f5f2eb]/10">
-          {cameraError ? (
-            <div className="absolute inset-0 flex items-center justify-center text-[#f5f2eb]/70 font-sans text-sm text-center px-8">
-              Camera access is needed for the studio session. Check your
-              browser's permission settings and reload.
-            </div>
-          ) : (
-            <Webcam
-              ref={webcamRef}
-              audio={false}
-              mirrored
-              screenshotFormat="image/jpeg"
-              videoConstraints={{ facingMode: "user", width: 1280, height: 960 }}
-              onUserMedia={() => setCameraReady(true)}
-              onUserMediaError={() => setCameraError(true)}
-              className="w-full h-full object-cover scale-x-[-1]"
-            />
-          )}
-
-          {/* Countdown overlay */}
-          {cameraReady && shots.length < CAPTURE_COUNT && (
-            <div className="absolute inset-0 flex items-end justify-center pb-6 pointer-events-none">
-              <div
-                key={countdown}
-                className="font-mono text-white text-7xl font-bold drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)] animate-countdownPulse"
-              >
+        {/* Viewport View */}
+        <div className="relative aspect-[4/3] bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl border border-white/5">
+          <video 
+            ref={videoRef} 
+            autoPlay 
+            playsInline 
+            className="w-full h-full object-cover scale-x-[-1]"
+          />
+          
+          {/* Overlay Countdown Indicator */}
+          {countdown !== null && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+              <span className="font-serif text-9xl md:text-[12rem] text-white tracking-tighter animate-ping-once">
                 {countdown}
-              </div>
+              </span>
             </div>
           )}
-
-          {/* Shot counter */}
-          <div className="absolute top-4 right-4 font-mono text-xs tracking-widest bg-black/50 text-white px-3 py-1.5 rounded-full backdrop-blur-sm">
-            {shots.length} / {CAPTURE_COUNT}
-          </div>
         </div>
 
-        <p className="text-center text-[#f5f2eb]/40 font-sans text-sm mt-5">
-          A new shot fires every {CAPTURE_INTERVAL_SECONDS} seconds — change
-          your pose, outfit, or prop before the flash.
-        </p>
-
-        {/* Filmstrip of captured shots so far */}
-        {shots.length > 0 && (
-          <div className="flex gap-2 mt-6 overflow-x-auto pb-2">
-            {shots.map((s, i) => (
-              <img
-                key={i}
-                src={s}
-                alt={`Shot ${i + 1}`}
-                className="w-16 h-12 object-cover rounded-md ring-1 ring-[#f5f2eb]/15 flex-shrink-0"
-              />
-            ))}
+        {/* Dynamic Controls Bar */}
+        <div className="flex flex-col items-center gap-4 mt-2">
+          <button
+            onClick={triggerCapture}
+            disabled={countdown !== null}
+            className="w-20 h-20 rounded-full border-4 border-white bg-white/10 hover:bg-white flex items-center justify-center transition-all shadow-lg active:scale-95 disabled:opacity-30 group"
+          >
+            <div className="w-14 h-14 rounded-full bg-white group-hover:bg-zinc-900 transition-colors" />
+          </button>
+          <div className="font-sans text-xs text-white/40 tracking-wide">
+            Click frame mirror to snap portrait
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
