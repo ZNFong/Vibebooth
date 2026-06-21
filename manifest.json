@@ -1,0 +1,13 @@
+{
+  "name": "VIBEBOOTH",
+  "short_name": "VIBEBOOTH",
+  "description": "Your photo, your booth.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#16151A",
+  "theme_color": "#16151A",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

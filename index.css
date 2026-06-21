@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: #f5f2eb;
+}
+
+/* Print isolation — only the photo strip survives a print job */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #print-strip,
+  #print-strip * {
+    visibility: visible;
+  }
+  #print-strip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+  }
+  @page {
+    margin: 0;
+    size: auto;
+  }
+}
