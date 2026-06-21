@@ -1,86 +1,99 @@
-import React from "react";
-import { LAYOUTS } from "../constants";
+import React, { useState } from 'react';
+import { LAYOUTS } from './constants';
 
-export default function PhotoPicker({ shots, selectedLayoutId, selectedIndices, onToggle, onLayoutChange, onContinue }) {
-  const layout = LAYOUTS.find((l) => l.id === selectedLayoutId) || LAYOUTS[0];
-  const slotsNeeded = layout.slots;
-  const isFull = selectedIndices.length >= slotsNeeded;
-  const canContinue = selectedIndices.length === slotsNeeded;
+interface PhotoPickerProps {
+  initialPhotos: string[];
+  requiredCount: number;
+  onComplete: (photos: string[]) => void;
+  onCancel: () => void;
+}
+
+export default function PhotoPicker({ initialPhotos, requiredCount, onComplete, onCancel }: PhotoPickerProps) {
+  const [selectedPhotos, setSelectedPhotos] = useState<string[]>(initialPhotos.slice(0, requiredCount));
+
+  function handleTogglePhoto(photo: string) {
+    if (selectedPhotos.includes(photo)) {
+      setSelectedPhotos(selectedPhotos.filter(p => p !== photo));
+    } else {
+      if (selectedPhotos.length < requiredCount) {
+        setSelectedPhotos([...selectedPhotos, photo]);
+      } else {
+        // Replace the first selected photo if we are at capacity
+        setSelectedPhotos([...selectedPhotos.slice(1), photo]);
+      }
+    }
+  }
+
+  function handleConfirm() {
+    if (selectedPhotos.length === requiredCount) {
+      onComplete(selectedPhotos);
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-[#f5f2eb] px-4 py-8">
+    <div className="min-h-screen bg-[#f5f2eb] px-4 py-12">
       <div className="max-w-3xl mx-auto">
-        <div className="flex items-baseline justify-between mb-1">
-          <h1 className="font-mono text-[#16151A] text-sm tracking-widest uppercase">
-            Pick your favorites
-          </h1>
-          <span className="font-mono text-xs text-[#16151A]/50">
-            {selectedIndices.length} / {slotsNeeded} selected
-          </span>
-        </div>
-        <p className="text-[#16151A]/60 font-sans text-sm mb-6">
-          Tap photos in the order you want them to appear. Switch layouts
-          below if you want a different shot count.
-        </p>
-
-        {/* Layout switcher */}
-        <div className="flex gap-2 overflow-x-auto pb-3 mb-5 -mx-1 px-1">
-          {LAYOUTS.map((l) => (
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div>
             <button
-              key={l.id}
-              onClick={() => onLayoutChange(l.id)}
-              className={`flex-shrink-0 font-sans text-xs font-medium px-3.5 py-2 rounded-full border transition-colors whitespace-nowrap ${
-                l.id === selectedLayoutId
-                  ? "bg-[#16151A] text-[#f5f2eb] border-[#16151A]"
-                  : "bg-transparent text-[#16151A]/70 border-[#16151A]/15 hover:border-[#16151A]/40"
-              }`}
+              type="button"
+              onClick={onCancel}
+              className="font-mono text-xs text-[#16151A]/40 tracking-widest uppercase hover:text-[#16151A] transition-colors mb-2 block"
             >
-              {l.name} · {l.slots}
+              ← Cancel Session
             </button>
-          ))}
+            <h1 className="font-serif text-3xl tracking-tight text-[#16151A]">
+              Pick your snapshots
+            </h1>
+            <p className="font-sans text-xs text-[#16151A]/50 mt-1">
+              Select exactly {requiredCount} photos for your structural strip layout.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleConfirm}
+            disabled={selectedPhotos.length !== requiredCount}
+            className="font-sans font-semibold text-sm bg-[#16151A] text-[#f5f2eb] px-6 py-3 rounded-full hover:bg-[#2a2830] transition-colors disabled:opacity-30 self-stretch md:self-auto text-center"
+          >
+            Continue ({selectedPhotos.length}/{requiredCount})
+          </button>
         </div>
 
-        {/* Photo grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-8">
-          {shots.map((shot, i) => {
-            const seq = selectedIndices.indexOf(i);
-            const isSelected = seq !== -1;
-            const disabled = !isSelected && isFull;
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {initialPhotos.map((photo, index) => {
+            const isSelected = selectedPhotos.includes(photo);
+            const selectIndex = selectedPhotos.indexOf(photo);
+
             return (
               <button
-                key={i}
-                onClick={() => !disabled && onToggle(i)}
-                disabled={disabled}
-                className={`relative aspect-[4/3] rounded-xl overflow-hidden ring-2 transition-all ${
-                  isSelected
-                    ? "ring-[#16151A] scale-[0.97]"
-                    : disabled
-                    ? "ring-transparent opacity-40"
-                    : "ring-transparent hover:ring-[#16151A]/30"
+                key={index}
+                type="button"
+                onClick={() => handleTogglePhoto(photo)}
+                className={`relative aspect-[4/3] bg-zinc-200 rounded-2xl overflow-hidden border-2 transition-all group ${
+                  isSelected ? 'border-[#16151A] scale-[0.98]' : 'border-transparent hover:border-[#16151A]/20'
                 }`}
               >
-                <img src={shot} alt={`Shot ${i + 1}`} className="w-full h-full object-cover" />
-                {isSelected && (
-                  <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-[#16151A] text-[#f5f2eb] font-mono text-xs font-bold flex items-center justify-center">
-                    {seq + 1}
-                  </div>
-                )}
+                <img 
+                  src={photo} 
+                  alt={`Capture snapshot ${index + 1}`} 
+                  className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${
+                    isSelected ? 'brightness-95' : ''
+                  }`}
+                />
+                
+                {/* Indicator Badge overlay */}
+                <div className={`absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center font-mono text-xs font-bold transition-all border ${
+                  isSelected 
+                    ? 'bg-[#16151A] text-[#f5f2eb] border-[#16151A]' 
+                    : 'bg-white/70 text-transparent border-transparent group-hover:border-zinc-400'
+                }`}>
+                  {isSelected ? selectIndex + 1 : ''}
+                </div>
               </button>
             );
           })}
         </div>
-
-        <button
-          onClick={onContinue}
-          disabled={!canContinue}
-          className={`w-full sm:w-auto font-sans font-semibold text-sm px-8 py-3.5 rounded-full transition-colors ${
-            canContinue
-              ? "bg-[#16151A] text-[#f5f2eb] hover:bg-[#2a2830]"
-              : "bg-[#16151A]/10 text-[#16151A]/35 cursor-not-allowed"
-          }`}
-        >
-          Continue to styling →
-        </button>
       </div>
     </div>
   );
