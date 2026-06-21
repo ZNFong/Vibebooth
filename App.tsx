@@ -5,7 +5,6 @@ import PhotoPicker from './PhotoPicker.tsx';
 import BoothStrip from './PhotoStrip.tsx';         
 
 const FRAME_THEMES = [
-  // Solid Colors
   { id: 'solid-cream', name: 'Studio Cream', class: 'bg-[#f5f2eb] text-stone-900 border border-stone-300' },
   { id: 'solid-black', name: 'Midnight Black', class: 'bg-zinc-950 text-zinc-100 border border-zinc-800' },
   { id: 'solid-white', name: 'Minimal White', class: 'bg-white text-zinc-950 border border-zinc-200' },
@@ -13,7 +12,6 @@ const FRAME_THEMES = [
   { id: 'solid-matcha', name: 'Matcha Green', class: 'bg-[#a3b18a] text-zinc-900' },
   { id: 'solid-cherry', name: 'Cherry Red', class: 'bg-[#e63946] text-white' },
   { id: 'solid-cobalt', name: 'Cobalt Blue', class: 'bg-[#0047ab] text-white' },
-  // Gradients
   { id: 'sunset-glow', name: 'Sunset Glow', class: 'bg-gradient-to-tr from-orange-400 via-pink-500 to-purple-600 text-white' },
   { id: 'cotton-candy', name: 'Cotton Candy', class: 'bg-gradient-to-br from-pink-300 via-purple-300 to-cyan-400 text-zinc-900' },
   { id: 'cyber-neon', name: 'Cyber Neon', class: 'bg-gradient-to-r from-fuchsia-600 to-cyan-500 text-white' },
@@ -107,7 +105,6 @@ export default function App() {
       </header>
 
       <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-16">
-        {/* Controls Column */}
         <div className="lg:col-span-4 bg-zinc-900/60 border border-zinc-800 rounded-3xl p-6 space-y-6 backdrop-blur-md">
           <div>
             <h2 className="text-sm font-semibold tracking-wider text-zinc-400 uppercase mb-3">1. Frame Layout</h2>
@@ -162,7 +159,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Viewfinder Column */}
         <div className="lg:col-span-4 bg-zinc-900/60 border border-zinc-800 rounded-3xl p-6 flex flex-col items-center backdrop-blur-md">
           <h2 className="text-sm font-semibold tracking-wider text-zinc-400 uppercase self-start mb-4">Live Studio</h2>
           <CameraFeed onPhotosCaptured={setAllCaptured} />
@@ -175,7 +171,6 @@ export default function App() {
           />
         </div>
 
-        {/* Preview Column */}
         <div className="lg:col-span-4 bg-zinc-900/60 border border-zinc-800 rounded-3xl p-6 flex flex-col items-center backdrop-blur-md">
           <h2 className="text-sm font-semibold tracking-wider text-zinc-400 uppercase self-start mb-4">Your Custom Strip</h2>
           <BoothStrip 
@@ -198,7 +193,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Album Grid */}
       <section className="max-w-7xl w-full border-t border-zinc-900 pt-10 print:hidden">
         <div className="flex justify-between items-center mb-8">
           <div>
