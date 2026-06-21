@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LAYOUTS } from './constants';
 
-export default function StudioSession({ slotsCount, onComplete, onCancel }) {
+interface StudioSessionProps {
+  slotsCount: number;
+  onComplete: (photos: string[]) => void;
+  onCancel: () => void;
+}
+
+export default function StudioSession({ slotsCount, onComplete, onCancel }: StudioSessionProps) {
   const [countdown, setCountdown] = useState<number | null>(null);
-  const [currentSlot, setCurrentSlot] = useState(0);
+  const [currentSlot, setCurrentSlot] = useState<number>(0);
   const [photos, setPhotos] = useState<string[]>([]);
-  const [flash, setFlash] = useState(false);
+  const [flash, setFlash] = useState<boolean>(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -48,7 +53,6 @@ export default function StudioSession({ slotsCount, onComplete, onCancel }) {
       return () => clearTimeout(timer);
     }
 
-    // Countdown hit 0, flash and capture!
     setFlash(true);
     setTimeout(() => setFlash(false), 150);
     captureSnapshot();
@@ -64,7 +68,6 @@ export default function StudioSession({ slotsCount, onComplete, onCancel }) {
     const ctx = canvas.getContext('2d');
     
     if (ctx) {
-      // Mirror the photo horizontally to match preview experience
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
       ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
@@ -74,7 +77,6 @@ export default function StudioSession({ slotsCount, onComplete, onCancel }) {
       setPhotos(updatedPhotos);
 
       if (currentSlot + 1 >= slotsCount) {
-        // Wrap up session
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(track => track.stop());
         }
@@ -87,16 +89,15 @@ export default function StudioSession({ slotsCount, onComplete, onCancel }) {
 
   return (
     <div className="min-h-screen bg-[#16151A] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Visual Flash Element */}
-      {flash && <div className="absolute inset-0 bg-white z-50 animate-fade" />}
+      {flash && <div className="absolute inset-0 bg-white z-50 transition-opacity duration-150" />}
 
       <div className="w-full max-w-3xl flex flex-col gap-4">
-        {/* Header Indicators */}
         <div className="flex justify-between items-center px-2">
           <div className="font-mono text-xs text-white/40 tracking-widest uppercase">
             Frame {currentSlot + 1} of {slotsCount}
           </div>
           <button 
+            type="button"
             onClick={onCancel}
             className="font-mono text-xs text-white/40 hover:text-white uppercase tracking-widest"
           >
@@ -104,7 +105,6 @@ export default function StudioSession({ slotsCount, onComplete, onCancel }) {
           </button>
         </div>
 
-        {/* Viewport View */}
         <div className="relative aspect-[4/3] bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl border border-white/5">
           <video 
             ref={videoRef} 
@@ -113,19 +113,18 @@ export default function StudioSession({ slotsCount, onComplete, onCancel }) {
             className="w-full h-full object-cover scale-x-[-1]"
           />
           
-          {/* Overlay Countdown Indicator */}
           {countdown !== null && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-              <span className="font-serif text-9xl md:text-[12rem] text-white tracking-tighter animate-ping-once">
+              <span className="font-serif text-9xl md:text-[12rem] text-white tracking-tighter">
                 {countdown}
               </span>
             </div>
           )}
         </div>
 
-        {/* Dynamic Controls Bar */}
         <div className="flex flex-col items-center gap-4 mt-2">
           <button
+            type="button"
             onClick={triggerCapture}
             disabled={countdown !== null}
             className="w-20 h-20 rounded-full border-4 border-white bg-white/10 hover:bg-white flex items-center justify-center transition-all shadow-lg active:scale-95 disabled:opacity-30 group"
