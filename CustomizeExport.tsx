@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { toJpeg } from "html-to-image";
 import PhotoStrip from "./PhotoStrip";
-import { BACKDROPS, FILTERS, LAYOUTS, MAX_CAPTION_LENGTH, DEFAULT_CAPTION } from "../constants";
+import { BACKDROPS, FILTERS, LAYOUTS, MAX_CAPTION_LENGTH, DEFAULT_CAPTION } from "./constants.js";
 
 export default function CustomizeExport({ photos, layoutId, onSave, onStartOver }) {
   const layout = LAYOUTS.find((l) => l.id === layoutId) || LAYOUTS[0];
