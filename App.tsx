@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import DesignSelector from './DesignSelector.tsx';
-import CameraFeed from './CameraFeed.tsx';
+import DesignSelector from './CustomizeExport.tsx'; // Points to your actual file!
+import CameraFeed from './StudioSession.tsx';       // Points to your actual studio file!
 import PhotoPicker from './PhotoPicker.tsx';
-import BoothStrip from './BoothStrip.tsx';
+import BoothStrip from './PhotoStrip.tsx';         // Points to your actual photo strip file!
 
 const FRAME_THEMES = [
   // Solid Colors
