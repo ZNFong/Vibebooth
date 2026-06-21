@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { LAYOUTS } from './constants';
 
 interface PhotoPickerProps {
   initialPhotos: string[];
@@ -18,7 +17,6 @@ export default function PhotoPicker({ initialPhotos, requiredCount, onComplete, 
       if (selectedPhotos.length < requiredCount) {
         setSelectedPhotos([...selectedPhotos, photo]);
       } else {
-        // Replace the first selected photo if we are at capacity
         setSelectedPhotos([...selectedPhotos.slice(1), photo]);
       }
     }
@@ -82,7 +80,6 @@ export default function PhotoPicker({ initialPhotos, requiredCount, onComplete, 
                   }`}
                 />
                 
-                {/* Indicator Badge overlay */}
                 <div className={`absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center font-mono text-xs font-bold transition-all border ${
                   isSelected 
                     ? 'bg-[#16151A] text-[#f5f2eb] border-[#16151A]' 
